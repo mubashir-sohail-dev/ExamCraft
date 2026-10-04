@@ -1,0 +1,84 @@
+name: ExamCraft CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend-test:
+    name: Backend Lint & Pytest Suite
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install System Dependencies (PyMuPDF & OCR support)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libgl1 libglib2.0-0
+
+      - name: Install Python Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Pytest Test Suite
+        env:
+          API_KEY: examcraft-secret-key-2026
+          ADMIN_API_KEY: examcraft-admin-key-2026
+          ENABLE_AUTH: "true"
+          QDRANT_URL: http://localhost:6333
+          LLM_API_KEY: ci-mock-key
+          LLM_MODEL_NAME: gemini-3.8-flash
+          LOG_LEVEL: INFO
+        run: |
+          pytest tests/ -v
+
+  frontend-lint:
+    name: Frontend Lint & Typecheck
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install NPM Dependencies
+        run: |
+          npm ci
+
+      - name: Run Next.js ESLint
+        run: |
+          npm run lint

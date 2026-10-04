@@ -1,0 +1,147 @@
+# =============================================================================
+# ExamCraft AI — Multi-Ecosystem Root .gitignore
+# Covers Python (FastAPI), Dart/Flutter (Mobile), Node/Next.js (Web), and OS
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# 1. Environment Variables & Secrets (CRITICAL SECURITY)
+# -----------------------------------------------------------------------------
+.env
+.env.*
+*.env
+**/.env
+**/.env.*
+!**/.env.example
+!**/.env.*.example
+*.pem
+*.key
+*.p12
+*.pfx
+*service-account*.json
+*credentials*.json
+
+# -----------------------------------------------------------------------------
+# 2. Python / FastAPI Backend
+# -----------------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Testing & Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# Uploads, Generated PDFs & Scratch
+temp_uploads/*
+!temp_uploads/.gitkeep
+backend/temp_uploads/*
+!backend/temp_uploads/.gitkeep
+*.pdf
+
+# Python Packaging
+*.egg-info/
+*.egg
+build/
+dist/
+eggs/
+parts/
+var/
+sdist/
+develop-eggs/
+downloads/
+
+# -----------------------------------------------------------------------------
+# 3. Node.js / Next.js 15 Frontend
+# -----------------------------------------------------------------------------
+node_modules/
+**/node_modules/
+.next/
+**/.next/
+out/
+dist/
+
+# Next.js Build & Cache Artifacts
+*.tsbuildinfo
+**/*.tsbuildinfo
+next-env.d.ts.bak
+
+# Large Archives & Bundles
+frontend.zip
+*.zip
+*.tar.gz
+*.tgz
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# -----------------------------------------------------------------------------
+# 4. Flutter / Dart / Android Mobile App
+# -----------------------------------------------------------------------------
+flutter_app/build/
+flutter_app/.dart_tool/
+flutter_app/.flutter-plugins
+flutter_app/.flutter-plugins-dependencies
+flutter_app/.packages
+flutter_app/.pub-cache/
+flutter_app/.pub/
+flutter_app/migrate_working_dir/
+
+# Android Specific
+flutter_app/android/.gradle/
+flutter_app/android/.kotlin/
+flutter_app/android/build/
+flutter_app/android/app/build/
+flutter_app/android/local.properties
+flutter_app/android/**/debug
+flutter_app/android/**/profile
+flutter_app/android/**/release
+local.properties
+key.properties
+
+# Keystores & Build Outputs
+*.apk
+*.aab
+*.jks
+*.keystore
+
+# -----------------------------------------------------------------------------
+# 5. Agent Transcripts & Workspace Artifacts
+# -----------------------------------------------------------------------------
+.agents/
+*.swp
+*.swo
+*~
+*.log
+
+# -----------------------------------------------------------------------------
+# 6. IDEs & Operating System Artifacts
+# -----------------------------------------------------------------------------
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# OS Metadata
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini

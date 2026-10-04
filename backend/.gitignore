@@ -1,0 +1,39 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# CPython cache
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# Environments & Virtual Envs
+.env
+.env.local
+.env.*.local
+*.env
+env/
+venv/
+.venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Uploads & Temporary Files
+temp_uploads/*
+!temp_uploads/.gitkeep
+*.pdf
+
+# IDE and Editor Files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+*.log

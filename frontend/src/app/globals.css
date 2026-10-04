@@ -1,0 +1,205 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* -------------------------------------------------------------------------
+     * Material Design 3 Light Theme Tokens
+     * Source: ExamCraftLightTheme (flutter_app/lib/core/theme/light_theme.dart)
+     * ------------------------------------------------------------------------- */
+    --background: 225 100% 98%;          /* #F7F9FF */
+    --foreground: 210 14% 11%;           /* #181C20 */
+
+    --card: 0 0% 100%;                   /* #FFFFFF (surfaceContainerLowest) */
+    --card-foreground: 210 14% 11%;      /* #181C20 */
+
+    --popover: 0 0% 100%;                /* #FFFFFF */
+    --popover-foreground: 210 14% 11%;   /* #181C20 */
+
+    --primary: 211 100% 37%;             /* #005BBF */
+    --primary-foreground: 0 0% 100%;     /* #FFFFFF */
+    --primary-container: 214 82% 51%;    /* #1A73E8 */
+    --primary-container-foreground: 0 0% 100%; /* #FFFFFF */
+    --primary-fixed: 225 100% 92%;       /* #D8E2FF */
+    --primary-fixed-dim: 220 100% 84%;   /* #ADC7FF */
+
+    --secondary: 144 100% 22%;           /* #006E2C */
+    --secondary-foreground: 0 0% 100%;   /* #FFFFFF */
+    --secondary-container: 130 90% 75%;  /* #86F898 */
+    --secondary-container-foreground: 145 100% 22%; /* #00722F */
+
+    --tertiary: 40 100% 25%;             /* #805600 */
+    --tertiary-foreground: 0 0% 100%;    /* #FFFFFF */
+    --tertiary-container: 41 100% 31%;   /* #A06D00 */
+    --tertiary-container-foreground: 0 0% 100%; /* #FFFFFF */
+
+    --muted: 220 25% 94%;                /* #EBEEF4 (surfaceContainer) */
+    --muted-foreground: 221 13% 29%;     /* #414754 (onSurfaceVariant) */
+
+    --accent: 214 82% 51%;               /* #1A73E8 */
+    --accent-foreground: 0 0% 100%;      /* #FFFFFF */
+
+    --destructive: 0 75% 42%;            /* #BA1A1A (error) */
+    --destructive-foreground: 0 0% 100%; /* #FFFFFF */
+    --error-container: 6 100% 92%;       /* #FFDAD6 */
+    --on-error-container: 356 100% 29%;  /* #93000A */
+
+    --border: 220 10% 87%;               /* #DADCE0 (borderCard) */
+    --border-subtle: 226 21% 80%;        /* #C1C6D6 (outlineVariant) */
+    --input: 226 21% 80%;                /* #C1C6D6 */
+    --ring: 211 100% 37%;                /* #005BBF */
+    --radius: 0.75rem;                   /* 12px default */
+
+    /* Material 3 Surface Hierarchy */
+    --surface-lowest: 0 0% 100%;         /* #FFFFFF */
+    --surface-low: 220 47% 96%;          /* #F1F4FA */
+    --surface-container: 220 25% 94%;    /* #EBEEF4 */
+    --surface-high: 220 19% 92%;         /* #E5E8EE */
+    --surface-highest: 213 16% 89%;      /* #DFE3E8 */
+
+    /* 5 Mandatory Subject Color Tokens (Light Mode HSL) */
+    --subject-physics: 211 100% 37%;     /* #005BBF */
+    --subject-chemistry: 144 100% 22%;   /* #006E2C */
+    --subject-mathematics: 40 100% 25%;  /* #805600 */
+    --subject-biology: 261 51% 47%;      /* #673AB7 */
+    --subject-computer: 187 100% 28%;    /* #00838F */
+
+    /* Subject Direct Color Tokens (Hex / Direct CSS variables for widgets) */
+    --physics-color: #005BBF;
+    --physics-bg: rgba(0, 91, 191, 0.08);
+    --physics-border: rgba(0, 91, 191, 0.3);
+
+    --chemistry-color: #006E2C;
+    --chemistry-bg: rgba(0, 110, 44, 0.08);
+    --chemistry-border: rgba(0, 110, 44, 0.3);
+
+    --math-color: #805600;
+    --math-bg: rgba(128, 86, 0, 0.08);
+    --math-border: rgba(128, 86, 0, 0.3);
+
+    --biology-color: #673AB7;
+    --biology-bg: rgba(103, 58, 183, 0.08);
+    --biology-border: rgba(103, 58, 183, 0.3);
+
+    --cs-color: #00838F;
+    --cs-bg: rgba(0, 131, 143, 0.08);
+    --cs-border: rgba(0, 131, 143, 0.3);
+  }
+
+  .dark {
+    /* -------------------------------------------------------------------------
+     * Material Design 3 Dark Theme Tokens
+     * Source: ExamCraftDarkTheme (flutter_app/lib/core/theme/dark_theme.dart)
+     * ------------------------------------------------------------------------- */
+    --background: 225 10% 8%;            /* #121316 */
+    --foreground: 227 6% 89%;            /* #E3E2E6 (onSurface) */
+
+    --card: 216 8% 13%;                  /* #1E2023 (surfaceContainer) */
+    --card-foreground: 227 6% 89%;       /* #E3E2E6 */
+
+    --popover: 216 8% 13%;               /* #1E2023 */
+    --popover-foreground: 227 6% 89%;    /* #E3E2E6 */
+
+    --primary: 220 100% 84%;             /* #ADC7FF */
+    --primary-foreground: 213 100% 20%;  /* #002E68 */
+    --primary-container: 214 82% 51%;    /* #1A73E8 */
+    --primary-container-foreground: 0 0% 100%; /* #FFFFFF */
+    --primary-fixed: 225 100% 92%;       /* #D8E2FF */
+    --primary-fixed-dim: 220 100% 84%;   /* #ADC7FF */
+
+    --secondary: 218 100% 83%;           /* #A8C8FF */
+    --secondary-foreground: 210 100% 19%;/* #003061 */
+    --secondary-container: 212 77% 29%;  /* #114784 */
+    --secondary-container-foreground: 217 93% 77%; /* #8CB6FB */
+
+    --tertiary: 215 42% 80%;             /* #B7C8E0 */
+    --tertiary-foreground: 212 35% 20%;  /* #213245 */
+    --tertiary-container: 215 15% 48%;   /* #68788E */
+    --tertiary-container-foreground: 0 0% 100%; /* #FFFFFF */
+
+    --muted: 225 5% 17%;                 /* #292A2D (surfaceContainerHigh) */
+    --muted-foreground: 224 18% 80%;     /* #C1C6D6 (onSurfaceVariant) */
+
+    --accent: 214 82% 51%;               /* #1A73E8 */
+    --accent-foreground: 0 0% 100%;      /* #FFFFFF */
+
+    --destructive: 6 100% 83%;           /* #FFB4AB (error) */
+    --destructive-foreground: 357 100% 21%; /* #690005 */
+    --error-container: 356 100% 29%;     /* #93000A */
+    --on-error-container: 6 100% 92%;    /* #FFDAD6 */
+
+    --border: 221 13% 29%;               /* #414754 (outlineVariant) */
+    --border-subtle: 225 10% 58%;        /* #8B909F (outline) */
+    --input: 221 13% 29%;                /* #414754 */
+    --ring: 220 100% 84%;                /* #ADC7FF */
+
+    /* Material 3 Surface Hierarchy */
+    --surface-lowest: 225 13% 6%;        /* #0D0E11 */
+    --surface-low: 210 7% 11%;           /* #1A1C1E */
+    --surface-container: 216 8% 13%;     /* #1E2023 */
+    --surface-high: 225 5% 17%;          /* #292A2D */
+    --surface-highest: 225 4% 21%;       /* #343538 */
+
+    /* 5 Mandatory Subject Color Tokens (Dark Mode HSL) */
+    --subject-physics: 220 100% 84%;     /* #ADC7FF */
+    --subject-chemistry: 130 90% 75%;    /* #86F898 */
+    --subject-mathematics: 38 100% 64%;  /* #FFBA45 */
+    --subject-biology: 260 45% 84%;      /* #D1C4E9 */
+    --subject-computer: 187 71% 71%;     /* #80DEEA */
+
+    /* Subject Direct Color Tokens (Hex / Direct CSS variables for widgets) */
+    --physics-color: #ADC7FF;
+    --physics-bg: rgba(173, 199, 255, 0.12);
+    --physics-border: rgba(173, 199, 255, 0.35);
+
+    --chemistry-color: #86F898;
+    --chemistry-bg: rgba(134, 248, 152, 0.12);
+    --chemistry-border: rgba(134, 248, 152, 0.35);
+
+    --math-color: #FFBA45;
+    --math-bg: rgba(255, 186, 69, 0.12);
+    --math-border: rgba(255, 186, 69, 0.35);
+
+    --biology-color: #D1C4E9;
+    --biology-bg: rgba(209, 196, 233, 0.12);
+    --biology-border: rgba(209, 196, 233, 0.35);
+
+    --cs-color: #80DEEA;
+    --cs-bg: rgba(128, 222, 234, 0.12);
+    --cs-border: rgba(128, 222, 234, 0.35);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased selection:bg-primary/20 selection:text-primary;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11", "rlig" 1, "calt" 1;
+  }
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-muted-foreground/20 rounded-full hover:bg-muted-foreground/40;
+}
+
+/* Print Stylesheet for A4 Output */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+}
