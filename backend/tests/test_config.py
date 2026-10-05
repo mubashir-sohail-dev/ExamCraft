@@ -7,8 +7,10 @@ import pytest
 from core.config import Settings
 
 
-def test_config_dev_mode_defaults_pass():
+def test_config_dev_mode_defaults_pass(monkeypatch):
     """Verifies that development mode allows default demo credentials."""
+    monkeypatch.delenv("API_KEY", raising=False)
+    monkeypatch.delenv("ADMIN_API_KEY", raising=False)
     cfg = Settings(ENVIRONMENT="development", STRICT_SECURITY=False)
     assert cfg.ENVIRONMENT == "development"
     assert cfg.STRICT_SECURITY is False

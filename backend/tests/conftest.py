@@ -10,6 +10,7 @@ if backend_dir not in sys.path:
 
 from main import app
 from fastapi.testclient import TestClient
+from core.config import settings
 
 
 def _create_configured_mock_qdrant():
@@ -34,7 +35,7 @@ def client():
     
     with patch("core.lifespan.QdrantClient", return_value=mock_qdrant):
         with patch("services.pdf_processor.ocr_engine", None):
-            with TestClient(app, headers={"X-API-Key": "examcraft-secret-key-2026"}) as test_client:
+            with TestClient(app, headers={"X-API-Key": settings.API_KEY}) as test_client:
                 test_client.app.state.qdrant_client = mock_qdrant
                 yield test_client
 
@@ -58,7 +59,7 @@ def admin_client():
     
     with patch("core.lifespan.QdrantClient", return_value=mock_qdrant):
         with patch("services.pdf_processor.ocr_engine", None):
-            with TestClient(app, headers={"X-API-Key": "examcraft-admin-key-2026"}) as test_client:
+            with TestClient(app, headers={"X-API-Key": settings.ADMIN_API_KEY}) as test_client:
                 test_client.app.state.qdrant_client = mock_qdrant
                 yield test_client
 

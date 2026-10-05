@@ -17,7 +17,7 @@ import pytest
 from fastapi import HTTPException
 from fastapi.testclient import TestClient
 
-from core.config import Settings
+from core.config import Settings, settings
 from core.limiter import limiter, budget_guard, DailyBudgetGuard
 from schemas.exam_schema import Class9TestSchema, MCQItem
 from main import app
@@ -235,7 +235,7 @@ class TestSuiteSlowAPIRateLimiter:
         c1 = TestClient(app, base_url="http://testserver", client=("192.168.1.10", 50000))
         c2 = TestClient(app, base_url="http://testserver", client=("192.168.1.20", 50000))
 
-        headers = {"X-API-Key": "examcraft-secret-key-2026"}
+        headers = {"X-API-Key": settings.API_KEY}
         payload = {
             "subject": "Chemistry",
             "chapter_name": "Chapter 1",
@@ -317,7 +317,7 @@ class TestSuiteDailyBudgetGuardStress:
             "short_count": 0,
             "long_count": 0
         }
-        headers = {"X-API-Key": "examcraft-secret-key-2026"}
+        headers = {"X-API-Key": settings.API_KEY}
 
         try:
             with patch("routers.generation.retrieve_topic_context", return_value="Context"), \
