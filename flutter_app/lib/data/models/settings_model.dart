@@ -2,6 +2,7 @@
 class SettingsModel {
   final String baseUrl;
   final String clientApiKey;
+  final String adminApiKey;
   final int defaultMcqCount;
   final int defaultShortCount;
   final int defaultLongCount;
@@ -13,7 +14,8 @@ class SettingsModel {
 
   const SettingsModel({
     this.baseUrl = 'https://testai.ai-vision.studio',
-    this.clientApiKey = 'examcraft-secret-key-2026',
+    this.clientApiKey = '',
+    this.adminApiKey = '',
     this.defaultMcqCount = 5,
     this.defaultShortCount = 3,
     this.defaultLongCount = 1,
@@ -21,14 +23,14 @@ class SettingsModel {
     this.enableTelemetry = true,
     this.enableDebugLogs = true,
     this.isDarkMode = false,
-    this.maxContextChars = 30000,
+    this.maxContextChars = 12000,
   });
 
   factory SettingsModel.fromJson(Map<String, dynamic> json) {
     return SettingsModel(
       baseUrl: json['base_url'] as String? ?? 'https://testai.ai-vision.studio',
-      clientApiKey:
-          json['client_api_key'] as String? ?? 'examcraft-secret-key-2026',
+      clientApiKey: json['client_api_key'] as String? ?? '',
+      adminApiKey: json['admin_api_key'] as String? ?? '',
       defaultMcqCount: json['default_mcq_count'] as int? ?? 5,
       defaultShortCount: json['default_short_count'] as int? ?? 3,
       defaultLongCount: json['default_long_count'] as int? ?? 1,
@@ -36,7 +38,7 @@ class SettingsModel {
       enableTelemetry: json['enable_telemetry'] as bool? ?? true,
       enableDebugLogs: json['enable_debug_logs'] as bool? ?? true,
       isDarkMode: json['is_dark_mode'] as bool? ?? false,
-      maxContextChars: json['max_context_chars'] as int? ?? 30000,
+      maxContextChars: json['max_context_chars'] as int? ?? 12000,
     );
   }
 
@@ -44,6 +46,7 @@ class SettingsModel {
     return {
       'base_url': baseUrl,
       'client_api_key': clientApiKey,
+      'admin_api_key': adminApiKey,
       'default_mcq_count': defaultMcqCount,
       'default_short_count': defaultShortCount,
       'default_long_count': defaultLongCount,
@@ -58,6 +61,7 @@ class SettingsModel {
   SettingsModel copyWith({
     String? baseUrl,
     String? clientApiKey,
+    String? adminApiKey,
     int? defaultMcqCount,
     int? defaultShortCount,
     int? defaultLongCount,
@@ -70,6 +74,7 @@ class SettingsModel {
     return SettingsModel(
       baseUrl: baseUrl ?? this.baseUrl,
       clientApiKey: clientApiKey ?? this.clientApiKey,
+      adminApiKey: adminApiKey ?? this.adminApiKey,
       defaultMcqCount: defaultMcqCount ?? this.defaultMcqCount,
       defaultShortCount: defaultShortCount ?? this.defaultShortCount,
       defaultLongCount: defaultLongCount ?? this.defaultLongCount,

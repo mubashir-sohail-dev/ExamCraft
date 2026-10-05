@@ -11,8 +11,9 @@ from services.vector_store_service import (
     retrieve_topic_context,
     retrieve_with_exercise_boost,
     resolve_collection_name,
+    parse_text_into_chunks,
 )
-from services.llm_service import generate_test_from_context
+from services.llm_service import generate_test_from_context, audit_grounding
 
 logger = get_logger(__name__)
 
@@ -125,11 +126,16 @@ async def draft_test_endpoint(payload: TestGenerationRequest, request: Request) 
                 detail=f"No textbook data found in database for chapter/topic '{payload.chapter_name}' in subject '{payload.subject.value}'"
             )
 
-        # Smart context pruning with boundary awareness
-        original_length = len(context)
-        context = prune_retrieved_context(context, max_chars=settings.MAX_CONTEXT_CHARS)
-        if len(context) < original_length:
-            logger.info("Pruned context from %d to %d chars (max=%d)", original_length, len(context), settings.MAX_CONTEXT_CHARS)
+        # Smart context chunk tagging and pruning
+        tagged_context, chunk_map = parse_text_into_chunks(
+            context,
+            default_chapter=payload.chapter_name,
+            max_chars=settings.MAX_CONTEXT_CHARS
+        )
+        if tagged_context:
+            context = tagged_context
+        else:
+            context = prune_retrieved_context(context, max_chars=settings.MAX_CONTEXT_CHARS)
 
         # 4. Asynchronous Section-Parallel LLM Generation & Timing
         llm_start_time = time.perf_counter()
@@ -153,9 +159,13 @@ async def draft_test_endpoint(payload: TestGenerationRequest, request: Request) 
         llm_duration = round(time.perf_counter() - llm_start_time, 2)
         total_duration = round(time.perf_counter() - endpoint_start_time, 2)
 
+        # 5. Server-Side Grounding Citation Audit
+        grounding_audit = audit_grounding(test_data_pydantic, chunk_map)
+
         logger.info(
-            "Test generation completed for '%s': retrieval=%.2fs, llm=%.2fs, total=%.2fs",
-            payload.subject.value, retrieval_duration, llm_duration, total_duration
+            "Test generation completed for '%s': retrieval=%.2fs, llm=%.2fs, total=%.2fs | Grounding rate: %.1f%% (%d/%d verified)",
+            payload.subject.value, retrieval_duration, llm_duration, total_duration,
+            grounding_audit["grounding_rate"], grounding_audit["verified_citations"], grounding_audit["total_questions"]
         )
 
         return test_data_pydantic

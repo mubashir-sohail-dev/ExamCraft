@@ -62,3 +62,14 @@ def admin_client():
                 test_client.app.state.qdrant_client = mock_qdrant
                 yield test_client
 
+
+@pytest.fixture(autouse=True)
+def reset_rate_limits():
+    """Resets SlowAPI rate limiter and DailyBudgetGuard before each test function."""
+    from core.limiter import limiter, budget_guard
+    limiter.reset()
+    budget_guard.reset_for_testing(count=0)
+    yield
+    limiter.reset()
+    budget_guard.reset_for_testing(count=0)
+

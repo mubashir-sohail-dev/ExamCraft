@@ -21,7 +21,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
   final TextEditingController _urlController =
       TextEditingController(text: 'https://testai.ai-vision.studio');
   final TextEditingController _apiKeyController =
-      TextEditingController(text: 'examcraft-secret-key-2026');
+      TextEditingController(text: '');
+  final TextEditingController _adminApiKeyController =
+      TextEditingController(text: '');
+  bool _obscureAdminApiKey = true;
   ExamSubject _selectedDefaultSubject = ExamSubject.chemistry;
   bool _enableTelemetry = true;
   bool _enableDebugLogs = true;
@@ -47,6 +50,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
       if (provider.clientApiKey.isNotEmpty) {
         _apiKeyController.text = provider.clientApiKey;
       }
+      if (provider.adminApiKey.isNotEmpty) {
+        _adminApiKeyController.text = provider.adminApiKey;
+      }
       setState(() {
         _enableTelemetry = provider.enableTelemetry;
         _includeAnswerKey = provider.includeAnswerKey;
@@ -58,6 +64,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void dispose() {
     _urlController.dispose();
     _apiKeyController.dispose();
+    _adminApiKeyController.dispose();
     super.dispose();
   }
 
@@ -441,8 +448,34 @@ class _SettingsScreenState extends State<SettingsScreen> {
               controller: _apiKeyController,
               decoration: InputDecoration(
                 labelText: 'Client API Key',
-                hintText: 'examcraft-secret-key-2026',
+                hintText: 'Enter client API key',
                 prefixIcon: const Icon(Icons.key),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+            const SizedBox(height: 14),
+            TextField(
+              key: const Key('input_admin_api_key'),
+              controller: _adminApiKeyController,
+              obscureText: _obscureAdminApiKey,
+              decoration: InputDecoration(
+                labelText: 'Admin API Key (Textbook Upload)',
+                hintText: 'Enter elevated admin API key',
+                prefixIcon: const Icon(Icons.security),
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _obscureAdminApiKey
+                        ? Icons.visibility
+                        : Icons.visibility_off,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _obscureAdminApiKey = !_obscureAdminApiKey;
+                    });
+                  },
+                ),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -462,6 +495,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           Provider.of<SettingsProvider>(context, listen: false);
                       await provider.updateBaseUrl(_urlController.text);
                       await provider.updateClientApiKey(_apiKeyController.text);
+                      await provider.updateAdminApiKey(_adminApiKeyController.text);
                     } catch (_) {}
                     if (!mounted) return;
                     messenger.showSnackBar(

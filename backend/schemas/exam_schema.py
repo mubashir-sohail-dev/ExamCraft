@@ -1,6 +1,4 @@
-# schemas/exam_schema.py
-
-from typing import List
+from typing import List, Optional
 from pydantic import BaseModel, Field, field_validator
 
 
@@ -14,6 +12,14 @@ class MCQItem(BaseModel):
     textbook_reference: str = Field(
         description="Exact quote or concept excerpt from the context verifying this answer"
     )
+    chunk_id: Optional[int] = Field(
+        default=None,
+        description="1-based integer index of cited context chunk [CHUNK #X]"
+    )
+    cited_quote: Optional[str] = Field(
+        default=None,
+        description="Verbatim 10-30 word excerpt directly from cited chunk"
+    )
 
     @field_validator("options")
     def validate_options_count(cls, v: List[str]) -> List[str]:
@@ -26,6 +32,18 @@ class ShortQuestionItem(BaseModel):
     question_number: int = Field(description="Sequential question number")
     question: str = Field(description="Concise question requiring a 2-4 line answer")
     marks: int = Field(default=2, description="Marks allocated for this short question")
+    textbook_reference: Optional[str] = Field(
+        default=None,
+        description="Exact concept excerpt or textbook citation verifying this question"
+    )
+    chunk_id: Optional[int] = Field(
+        default=None,
+        description="1-based integer index of cited context chunk [CHUNK #X]"
+    )
+    cited_quote: Optional[str] = Field(
+        default=None,
+        description="Verbatim excerpt directly from cited chunk"
+    )
 
 
 class LongQuestionItem(BaseModel):
@@ -34,6 +52,18 @@ class LongQuestionItem(BaseModel):
         description="Detailed numerical, analytical, or descriptive question"
     )
     marks: int = Field(default=5, description="Marks allocated for this long question")
+    textbook_reference: Optional[str] = Field(
+        default=None,
+        description="Exact concept excerpt or textbook citation verifying this question"
+    )
+    chunk_id: Optional[int] = Field(
+        default=None,
+        description="1-based integer index of cited context chunk [CHUNK #X]"
+    )
+    cited_quote: Optional[str] = Field(
+        default=None,
+        description="Verbatim excerpt directly from cited chunk"
+    )
 
 
 class Class9TestSchema(BaseModel):

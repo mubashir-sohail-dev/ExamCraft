@@ -10,8 +10,8 @@
 
 import * as React from "react";
 import { IngestionJobSnapshot, IngestionLogEntry } from "@/types/api";
-import { getSettings } from "@/lib/storage";
-import { DEFAULT_API_URL, DEFAULT_ADMIN_KEY } from "@/lib/constants";
+import { storage } from "@/lib/storage";
+import { DEFAULT_API_URL } from "@/lib/constants";
 
 const STORAGE_KEY = "examcraft_active_ingestion_job_id";
 
@@ -38,9 +38,16 @@ export function useIngestionJob() {
     const controller = new AbortController();
     abortControllerRef.current = controller;
 
-    const settings = getSettings();
+    const settings = storage.getSettings();
     const baseUrl = (settings.apiBaseUrl || DEFAULT_API_URL).trim().replace(/\/+$/, "");
-    const adminKey = (settings.adminApiKey || DEFAULT_ADMIN_KEY).trim();
+    const adminKey = (storage.getAdminKey() || settings.adminApiKey || "").trim();
+
+    if (!adminKey) {
+      setError("Administrator API Key required. Please configure your Admin Key in Settings.");
+      setIsStreaming(false);
+      return;
+    }
+
     const streamUrl = `${baseUrl}/api/admin/jobs/${jobId}/stream`;
 
     try {

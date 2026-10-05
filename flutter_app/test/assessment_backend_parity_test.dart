@@ -190,49 +190,52 @@ void main() {
       expect(client.baseUrl, equals(expectedBaseUrl));
     });
 
-    test('2. ApiClient attaches X-API-Key: examcraft-secret-key-2026 to client routes', () {
-      final client = ApiClient();
+    test('2. ApiClient attaches X-API-Key header to client routes via test fixture credentials', () {
+      final client = ApiClient(clientApiKey: 'test-client-key');
 
       expect(
         client.getApiKeyForPath('/api/subjects'),
-        equals(ApiClient.defaultClientApiKey),
+        equals('test-client-key'),
       );
       expect(
         client.getApiKeyForPath('/api/tests/draft'),
-        equals(ApiClient.defaultClientApiKey),
+        equals('test-client-key'),
       );
       expect(
         client.getApiKeyForPath('/api/subjects/Chemistry/chapters'),
-        equals(ApiClient.defaultClientApiKey),
+        equals('test-client-key'),
       );
 
       final headers = client.getHeadersForPath('/api/subjects');
-      expect(headers['X-API-Key'], equals('examcraft-secret-key-2026'));
+      expect(headers['X-API-Key'], equals('test-client-key'));
     });
 
-    test('3. ApiClient attaches X-API-Key: examcraft-admin-key-2026 to admin and upload routes', () {
-      final client = ApiClient();
+    test('3. ApiClient attaches X-API-Key header to admin and upload routes via test fixture credentials', () {
+      final client = ApiClient(adminApiKey: 'test-admin-key');
 
       expect(
         client.getApiKeyForPath('/api/admin/system-stats'),
-        equals(ApiClient.defaultAdminApiKey),
+        equals('test-admin-key'),
       );
       expect(
         client.getApiKeyForPath('/api/upload-textbook'),
-        equals(ApiClient.defaultAdminApiKey),
+        equals('test-admin-key'),
       );
       expect(
         client.getApiKeyForPath('/api/admin/collections'),
-        equals('examcraft-admin-key-2026'),
+        equals('test-admin-key'),
       );
 
       final adminHeaders = client.getHeadersForPath('/api/admin/indexing');
-      expect(adminHeaders['X-API-Key'], equals('examcraft-admin-key-2026'));
+      expect(adminHeaders['X-API-Key'], equals('test-admin-key'));
     });
 
     test('4. Dynamic API key mutation via updateClientApiKey updates outgoing headers', () {
-      final client = ApiClient();
-      expect(client.clientApiKey, equals('examcraft-secret-key-2026'));
+      final client = ApiClient(
+        clientApiKey: 'initial-client-key',
+        adminApiKey: 'test-admin-key',
+      );
+      expect(client.clientApiKey, equals('initial-client-key'));
 
       client.updateClientApiKey('custom-teacher-secret-key-2026');
       expect(client.clientApiKey, equals('custom-teacher-secret-key-2026'));
@@ -244,7 +247,7 @@ void main() {
       // Admin key must remain separate and untouched
       expect(
         client.getApiKeyForPath('/api/admin/status'),
-        equals('examcraft-admin-key-2026'),
+        equals('test-admin-key'),
       );
     });
   });
@@ -435,28 +438,34 @@ void main() {
   });
 
   group('Milestone 2 Parity Tests: R5 - Settings URL Presets & Client API Key', () {
-    test('10. SettingsModel includes clientApiKey and updates properly', () {
+    test('10. SettingsModel includes clientApiKey and adminApiKey and updates properly', () {
       const defaultSettings = SettingsModel();
-      expect(
-        defaultSettings.clientApiKey,
-        equals('examcraft-secret-key-2026'),
-      );
+      expect(defaultSettings.clientApiKey, equals(''));
+      expect(defaultSettings.adminApiKey, equals(''));
+      expect(defaultSettings.maxContextChars, equals(12000));
 
       final json = defaultSettings.toJson();
-      expect(json['client_api_key'], equals('examcraft-secret-key-2026'));
+      expect(json['client_api_key'], equals(''));
+      expect(json['admin_api_key'], equals(''));
 
       final fromJson = SettingsModel.fromJson({
         'client_api_key': 'new-test-key-1234',
+        'admin_api_key': 'new-admin-key-5678',
         'base_url': 'http://localhost:8000',
       });
       expect(fromJson.clientApiKey, equals('new-test-key-1234'));
+      expect(fromJson.adminApiKey, equals('new-admin-key-5678'));
       expect(fromJson.baseUrl, equals('http://localhost:8000'));
 
-      final updated = defaultSettings.copyWith(clientApiKey: 'updated-key');
+      final updated = defaultSettings.copyWith(
+        clientApiKey: 'updated-key',
+        adminApiKey: 'updated-admin-key',
+      );
       expect(updated.clientApiKey, equals('updated-key'));
+      expect(updated.adminApiKey, equals('updated-admin-key'));
     });
 
-    test('11. SettingsProvider updates clientApiKey, persists, and syncs ApiClient', () async {
+    test('11. SettingsProvider updates clientApiKey and adminApiKey, persists, and syncs ApiClient', () async {
       SharedPreferences.setMockInitialValues({});
       final client = ApiClient();
       final settingsRepo = SettingsRepository();
@@ -466,19 +475,26 @@ void main() {
       );
 
       await Future.delayed(Duration.zero);
-      expect(provider.clientApiKey, equals('examcraft-secret-key-2026'));
-      expect(client.clientApiKey, equals('examcraft-secret-key-2026'));
+      expect(provider.clientApiKey, equals(''));
+      expect(provider.adminApiKey, equals(''));
+      expect(client.clientApiKey, equals(''));
+      expect(client.adminApiKey, equals(''));
 
       await provider.updateClientApiKey('new-persisted-key-777');
       expect(provider.clientApiKey, equals('new-persisted-key-777'));
       expect(client.clientApiKey, equals('new-persisted-key-777'));
 
+      await provider.updateAdminApiKey('new-persisted-admin-key-888');
+      expect(provider.adminApiKey, equals('new-persisted-admin-key-888'));
+      expect(client.adminApiKey, equals('new-persisted-admin-key-888'));
+
       // Verify persistence in SettingsRepository
       final savedSettings = await settingsRepo.getSettings();
       expect(savedSettings.clientApiKey, equals('new-persisted-key-777'));
+      expect(savedSettings.adminApiKey, equals('new-persisted-admin-key-888'));
     });
 
-    testWidgets('12. SettingsScreen renders presets chips and client API key field, and saves both',
+    testWidgets('12. SettingsScreen renders presets chips, API key fields, and saves both',
         (WidgetTester tester) async {
       SharedPreferences.setMockInitialValues({});
       final settingsRepo = SettingsRepository();
@@ -511,9 +527,11 @@ void main() {
       expect(find.byKey(const Key('chip_preset_localhost')), findsOneWidget);
       expect(find.byKey(const Key('chip_preset_cloud')), findsOneWidget);
 
-      // Verify client api key input field exists
+      // Verify client and admin api key input fields exist
       final apiKeyInput = find.byKey(const Key('input_client_api_key'));
       expect(apiKeyInput, findsOneWidget);
+      final adminApiKeyInput = find.byKey(const Key('input_admin_api_key'));
+      expect(adminApiKeyInput, findsOneWidget);
 
       // Tap Android Emulator preset chip
       await tester.ensureVisible(emulatorChip);
@@ -523,9 +541,13 @@ void main() {
       final urlField = tester.widget<TextField>(find.byKey(const Key('input_api_base_url')));
       expect(urlField.controller?.text, equals('http://10.0.2.2:8000'));
 
-      // Enter new API key and save
+      // Enter new API keys and save
       await tester.ensureVisible(apiKeyInput);
       await tester.enterText(apiKeyInput, 'my-custom-teacher-key-999');
+      await tester.pumpAndSettle();
+
+      await tester.ensureVisible(adminApiKeyInput);
+      await tester.enterText(adminApiKeyInput, 'my-custom-admin-key-888');
       await tester.pumpAndSettle();
 
       final saveBtn = find.byKey(const Key('btn_save_url'));
@@ -536,6 +558,8 @@ void main() {
       expect(settingsProvider.baseUrl, equals('http://10.0.2.2:8000'));
       expect(settingsProvider.clientApiKey, equals('my-custom-teacher-key-999'));
       expect(client.clientApiKey, equals('my-custom-teacher-key-999'));
+      expect(settingsProvider.adminApiKey, equals('my-custom-admin-key-888'));
+      expect(client.adminApiKey, equals('my-custom-admin-key-888'));
     });
 
     testWidgets('13. UploadTextbookScreen pre-fills subject and grade from route arguments',

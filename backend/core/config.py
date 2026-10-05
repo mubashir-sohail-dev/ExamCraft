@@ -1,5 +1,5 @@
-from typing import List
-from pydantic import Field
+from typing import List, Set
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from dotenv import load_dotenv
 
@@ -84,6 +84,20 @@ class Settings(BaseSettings):
         description="Application logging level (DEBUG, INFO, WARNING, ERROR)"
     )
 
+    # Deployment Environment & Hardening
+    ENVIRONMENT: str = Field(
+        default="development",
+        description="Deployment environment: 'development', 'staging', or 'production'"
+    )
+    STRICT_SECURITY: bool = Field(
+        default=False,
+        description="Force strict production security checks regardless of ENVIRONMENT value"
+    )
+    DAILY_LLM_REQUEST_LIMIT: int = Field(
+        default=200,
+        description="Maximum daily LLM generation requests allowed across the platform"
+    )
+
     # Security & API Authentication
     API_KEY: str = Field(
         default="examcraft-secret-key-2026",
@@ -110,6 +124,41 @@ class Settings(BaseSettings):
         "Biology",
         "Computer Science",
     ]
+
+    @model_validator(mode="after")
+    def validate_production_security(self) -> "Settings":
+        """Fail-fast startup guard preventing known demo keys in production or strict mode."""
+        is_strict = self.STRICT_SECURITY or (self.ENVIRONMENT.strip().lower() == "production")
+        if is_strict:
+            known_demo_defaults = {
+                "examcraft-secret-key-2026",
+                "examcraft-admin-key-2026",
+                "examcraft-default-key-change-in-production",
+                "admin-default-key-change-in-production",
+                "",
+            }
+            api_key = (self.API_KEY or "").strip()
+            if not api_key or api_key in known_demo_defaults:
+                raise ValueError(
+                    "CRITICAL PRODUCTION SECURITY ERROR: API_KEY must not use demo defaults "
+                    f"('{self.API_KEY}') when ENVIRONMENT=production or STRICT_SECURITY=true. "
+                    "Set a secure, high-entropy API_KEY in your environment."
+                )
+
+            admin_key = (self.ADMIN_API_KEY or "").strip()
+            if not admin_key or admin_key in known_demo_defaults:
+                raise ValueError(
+                    "CRITICAL PRODUCTION SECURITY ERROR: ADMIN_API_KEY must not use demo defaults "
+                    f"('{self.ADMIN_API_KEY}') when ENVIRONMENT=production or STRICT_SECURITY=true. "
+                    "Set a secure, high-entropy ADMIN_API_KEY in your environment."
+                )
+
+            if api_key == admin_key:
+                raise ValueError(
+                    "CRITICAL PRODUCTION SECURITY ERROR: API_KEY and ADMIN_API_KEY must be distinct "
+                    "to enforce administrative privilege separation."
+                )
+        return self
 
     model_config = SettingsConfigDict(
         env_file=".env",

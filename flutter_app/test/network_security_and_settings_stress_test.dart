@@ -92,7 +92,10 @@ void main() {
     late ApiClient client;
 
     setUp(() {
-      client = ApiClient();
+      client = ApiClient(
+        clientApiKey: 'test-fixture-client-key',
+        adminApiKey: 'test-fixture-admin-key',
+      );
     });
 
     test('2.1 Route classification: standard client endpoints', () {
@@ -109,12 +112,12 @@ void main() {
       for (final path in clientPaths) {
         expect(
           client.getApiKeyForPath(path),
-          equals(ApiClient.defaultClientApiKey),
+          equals('test-fixture-client-key'),
           reason: 'Path "$path" must receive client API key',
         );
         expect(
           client.getHeadersForPath(path)['X-API-Key'],
-          equals(ApiClient.defaultClientApiKey),
+          equals('test-fixture-client-key'),
         );
       }
     });
@@ -134,41 +137,41 @@ void main() {
       for (final path in adminPaths) {
         expect(
           client.getApiKeyForPath(path),
-          equals(ApiClient.defaultAdminApiKey),
+          equals('test-fixture-admin-key'),
           reason: 'Path "$path" must receive admin API key',
         );
         expect(
           client.getHeadersForPath(path)['X-API-Key'],
-          equals(ApiClient.defaultAdminApiKey),
+          equals('test-fixture-admin-key'),
         );
       }
     });
 
     test('2.3 Edge case paths: sub-paths, trailing slashes, and substring matching', () {
       // Admin route with trailing slash
-      expect(client.getApiKeyForPath('/api/admin/'), equals(ApiClient.defaultAdminApiKey));
+      expect(client.getApiKeyForPath('/api/admin/'), equals('test-fixture-admin-key'));
 
       // Nested admin subpath
-      expect(client.getApiKeyForPath('/api/admin/collections/upload'), equals(ApiClient.defaultAdminApiKey));
+      expect(client.getApiKeyForPath('/api/admin/collections/upload'), equals('test-fixture-admin-key'));
 
       // Path without leading slash: 'api/admin'
       // Note: _isAdminRoute checks contains('/api/admin') so 'api/admin' lacks leading slash
       final lacksLeadingSlash = client.getApiKeyForPath('api/admin/test');
       expect(
         lacksLeadingSlash,
-        equals(ApiClient.defaultClientApiKey),
+        equals('test-fixture-client-key'),
         reason: 'Path without leading slash does not match "/api/admin" - empirical verification of substring pattern',
       );
 
       // Substring match: route containing "upload-textbook"
       expect(
         client.getApiKeyForPath('/api/tests/upload-textbook-summary'),
-        equals(ApiClient.defaultAdminApiKey),
+        equals('test-fixture-admin-key'),
         reason: 'Any path containing "upload-textbook" triggers admin key',
       );
 
       // Empty string path
-      expect(client.getApiKeyForPath(''), equals(ApiClient.defaultClientApiKey));
+      expect(client.getApiKeyForPath(''), equals('test-fixture-client-key'));
     });
   });
 
@@ -183,7 +186,11 @@ void main() {
       );
       customDio.httpClientAdapter = mockAdapter;
 
-      final client = ApiClient(customDio: customDio);
+      final client = ApiClient(
+        customDio: customDio,
+        clientApiKey: 'test-fixture-client-key',
+        adminApiKey: 'test-fixture-admin-key',
+      );
 
       // Verify interceptor is attached to customDio
       expect(customDio.interceptors.isNotEmpty, isTrue);
@@ -195,7 +202,7 @@ void main() {
       // Verify low-level wire headers captured by adapter
       expect(mockAdapter.lastRequestOptions, isNotNull);
       final headers = mockAdapter.lastRequestOptions!.headers;
-      expect(headers['X-API-Key'], equals(ApiClient.defaultClientApiKey));
+      expect(headers['X-API-Key'], equals('test-fixture-client-key'));
       expect(headers['X-Custom-Client-Id'], equals('Flutter-Device-99'));
     });
 
@@ -204,13 +211,17 @@ void main() {
       final customDio = Dio(BaseOptions(baseUrl: 'http://test-wire:8000'));
       customDio.httpClientAdapter = mockAdapter;
 
-      final client = ApiClient(customDio: customDio);
+      final client = ApiClient(
+        customDio: customDio,
+        clientApiKey: 'fixture-client-token-111',
+        adminApiKey: 'fixture-admin-token-222',
+      );
 
-      // Request 1: Client route with default key
+      // Request 1: Client route with fixture key
       await client.get('/api/subjects');
       expect(
         mockAdapter.capturedRequests.last.headers['X-API-Key'],
-        equals('examcraft-secret-key-2026'),
+        equals('fixture-client-token-111'),
       );
 
       // Mutate clientApiKey
@@ -224,11 +235,11 @@ void main() {
         equals('custom-teacher-auth-token-111'),
       );
 
-      // Request 3: Admin route with default admin key
+      // Request 3: Admin route with fixture admin key
       await client.get('/api/admin/indexing/status');
       expect(
         mockAdapter.capturedRequests.last.headers['X-API-Key'],
-        equals('examcraft-admin-key-2026'),
+        equals('fixture-admin-token-222'),
       );
 
       // Mutate adminApiKey
@@ -274,7 +285,8 @@ void main() {
     test('4.1 Deserialization with empty map {} uses all defaults', () {
       final model = SettingsModel.fromJson({});
       expect(model.baseUrl, equals('https://testai.ai-vision.studio'));
-      expect(model.clientApiKey, equals('examcraft-secret-key-2026'));
+      expect(model.clientApiKey, equals(''));
+      expect(model.adminApiKey, equals(''));
       expect(model.defaultMcqCount, equals(5));
       expect(model.defaultShortCount, equals(3));
       expect(model.defaultLongCount, equals(1));
@@ -282,13 +294,14 @@ void main() {
       expect(model.enableTelemetry, isTrue);
       expect(model.enableDebugLogs, isTrue);
       expect(model.isDarkMode, isFalse);
-      expect(model.maxContextChars, equals(30000));
+      expect(model.maxContextChars, equals(12000));
     });
 
     test('4.2 Deserialization with null values falls back safely to defaults', () {
       final model = SettingsModel.fromJson({
         'base_url': null,
         'client_api_key': null,
+        'admin_api_key': null,
         'default_mcq_count': null,
         'default_short_count': null,
         'default_long_count': null,
@@ -300,7 +313,8 @@ void main() {
       });
 
       expect(model.baseUrl, equals('https://testai.ai-vision.studio'));
-      expect(model.clientApiKey, equals('examcraft-secret-key-2026'));
+      expect(model.clientApiKey, equals(''));
+      expect(model.adminApiKey, equals(''));
       expect(model.defaultMcqCount, equals(5));
       expect(model.defaultShortCount, equals(3));
       expect(model.defaultLongCount, equals(1));
@@ -308,7 +322,7 @@ void main() {
       expect(model.enableTelemetry, isTrue);
       expect(model.enableDebugLogs, isTrue);
       expect(model.isDarkMode, isFalse);
-      expect(model.maxContextChars, equals(30000));
+      expect(model.maxContextChars, equals(12000));
     });
 
     test('4.3 Deserialization with custom values and extraneous unexpected keys', () {
@@ -343,6 +357,7 @@ void main() {
       const original = SettingsModel(
         baseUrl: 'http://10.0.2.2:8000',
         clientApiKey: 'test-roundtrip-key',
+        adminApiKey: 'test-admin-roundtrip-key',
         defaultMcqCount: 8,
         defaultShortCount: 4,
         defaultLongCount: 3,
@@ -356,6 +371,7 @@ void main() {
       final json = original.toJson();
       expect(json['base_url'], equals('http://10.0.2.2:8000'));
       expect(json['client_api_key'], equals('test-roundtrip-key'));
+      expect(json['admin_api_key'], equals('test-admin-roundtrip-key'));
       expect(json['default_mcq_count'], equals(8));
       expect(json['default_short_count'], equals(4));
       expect(json['default_long_count'], equals(3));
@@ -368,6 +384,7 @@ void main() {
       final roundtripped = SettingsModel.fromJson(json);
       expect(roundtripped.baseUrl, equals(original.baseUrl));
       expect(roundtripped.clientApiKey, equals(original.clientApiKey));
+      expect(roundtripped.adminApiKey, equals(original.adminApiKey));
       expect(roundtripped.defaultMcqCount, equals(original.defaultMcqCount));
       expect(roundtripped.defaultShortCount, equals(original.defaultShortCount));
       expect(roundtripped.defaultLongCount, equals(original.defaultLongCount));
@@ -382,10 +399,12 @@ void main() {
       const model = SettingsModel();
       final updated = model.copyWith(
         clientApiKey: 'brand-new-key',
+        adminApiKey: 'brand-new-admin-key',
         isDarkMode: true,
       );
 
       expect(updated.clientApiKey, equals('brand-new-key'));
+      expect(updated.adminApiKey, equals('brand-new-admin-key'));
       expect(updated.isDarkMode, isTrue);
       // Preserved fields
       expect(updated.baseUrl, equals(model.baseUrl));

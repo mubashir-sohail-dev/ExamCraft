@@ -31,6 +31,7 @@ import { Label } from "@/components/ui/label";
 import {
   getSettings,
   saveSettings,
+  storage,
   clearActiveDraft,
   clearRecentPapers,
   clearAllStorage,
@@ -38,7 +39,7 @@ import {
 } from "@/lib/storage";
 import { AppSettings, HealthResponse } from "@/types/api";
 import { SubjectType } from "@/types/exam";
-import { SUBJECTS_CONFIG, DEFAULT_API_URL, DEFAULT_CLIENT_KEY, DEFAULT_ADMIN_KEY } from "@/lib/constants";
+import { SUBJECTS_CONFIG, DEFAULT_API_URL, DEFAULT_CLIENT_KEY } from "@/lib/constants";
 import { api } from "@/lib/api";
 import { useTelemetry } from "@/context/TelemetryContext";
 import { useTestDraft } from "@/context/TestDraftContext";
@@ -79,6 +80,7 @@ export default function SettingsPage() {
     };
     setSettings(cleanSettings);
     saveSettings(cleanSettings);
+    storage.setAdminKey(cleanSettings.adminApiKey);
     setIsSaved(true);
     void refreshHealth();
     showNotification("Settings updated and saved successfully!");
@@ -319,9 +321,8 @@ export default function SettingsPage() {
             )}
           </div>
 
-          {/* Authentication Keys Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
-            {/* Client API Key */}
+          {/* Client API Key */}
+          <div className="pt-1">
             <div className="space-y-1.5">
               <Label className="font-medium text-foreground text-xs flex items-center justify-between">
                 <span className="flex items-center gap-1.5">
@@ -348,34 +349,53 @@ export default function SettingsPage() {
                 Authenticates test generation, chapter querying, and PDF rendering requests
               </p>
             </div>
+          </div>
+        </CardContent>
+      </Card>
 
-            {/* Admin API Key */}
-            <div className="space-y-1.5">
-              <Label className="font-medium text-foreground text-xs flex items-center justify-between">
-                <span className="flex items-center gap-1.5">
-                  <Shield className="h-3.5 w-3.5 text-secondary" />
-                  <span>Admin API Key (Textbook Upload)</span>
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setShowAdminKey(!showAdminKey)}
-                  className="text-muted-foreground hover:text-foreground"
-                  title={showAdminKey ? "Hide key" : "Show key"}
-                >
-                  {showAdminKey ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-                </button>
-              </Label>
-              <Input
-                type={showAdminKey ? "text" : "password"}
-                value={settings.adminApiKey}
-                onChange={(e) => setSettings({ ...settings, adminApiKey: e.target.value })}
-                placeholder={DEFAULT_ADMIN_KEY}
-                className="text-xs font-mono"
-              />
-              <p className="text-[10px] text-muted-foreground">
-                Authorizes textbook PDF upload, chunking, and Qdrant collection upsert
-              </p>
-            </div>
+      {/* Administrator API Key Input Card */}
+      <Card className="border-border/80 shadow-2xs border-l-4 border-l-secondary">
+        <CardHeader className="pb-3 border-b border-border/60">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base font-semibold flex items-center gap-2">
+              <Shield className="h-4 w-4 text-secondary" />
+              <span>Administrator API Key</span>
+            </CardTitle>
+            <Badge variant="outline" className="text-[10px] text-secondary border-secondary/30 bg-secondary/10">
+              LocalStorage Only
+            </Badge>
+          </div>
+          <CardDescription className="text-xs">
+            Elevated administrative secret required for curriculum textbook PDF upload, chunking, and Qdrant collection upsert. Stored strictly in browser LocalStorage; never bundled into public code.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="p-4 sm:p-5 space-y-3 text-xs">
+          <div className="space-y-1.5">
+            <Label className="font-medium text-foreground text-xs flex items-center justify-between">
+              <span className="flex items-center gap-1.5">
+                <Key className="h-3.5 w-3.5 text-secondary" />
+                <span>Admin API Key (X-API-Key)</span>
+              </span>
+              <button
+                type="button"
+                onClick={() => setShowAdminKey(!showAdminKey)}
+                className="text-muted-foreground hover:text-foreground flex items-center gap-1 text-[11px]"
+                title={showAdminKey ? "Hide key" : "Show key"}
+              >
+                {showAdminKey ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                <span>{showAdminKey ? "Hide" : "Show"}</span>
+              </button>
+            </Label>
+            <Input
+              type={showAdminKey ? "text" : "password"}
+              value={settings.adminApiKey}
+              onChange={(e) => setSettings({ ...settings, adminApiKey: e.target.value })}
+              placeholder="Enter elevated administrator key (e.g. sk-admin-...)"
+              className="text-xs font-mono"
+            />
+            <p className="text-[10px] text-muted-foreground">
+              Stored strictly in browser LocalStorage. Authorizes textbook PDF upload on /upload.
+            </p>
           </div>
         </CardContent>
       </Card>

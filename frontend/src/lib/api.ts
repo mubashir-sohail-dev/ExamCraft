@@ -17,11 +17,10 @@ import {
   ApiErrorDetail,
 } from "@/types/api";
 import { Class9TestSchema } from "@/types/exam";
-import { getSettings } from "./storage";
+import { getSettings, storage } from "./storage";
 import {
   DEFAULT_API_URL,
   DEFAULT_CLIENT_KEY,
-  DEFAULT_ADMIN_KEY,
 } from "./constants";
 import {
   getMockHealth,
@@ -136,11 +135,14 @@ class ApiClient {
 
         // Determine if request is admin route
         const isAdminRoute = config.url?.includes("/admin/");
+        const adminKey = (storage.getAdminKey() || settings.adminApiKey || "").trim();
         const apiKey = isAdminRoute
-          ? settings.adminApiKey || DEFAULT_ADMIN_KEY
+          ? adminKey
           : settings.clientApiKey || DEFAULT_CLIENT_KEY;
 
-        config.headers["X-API-Key"] = apiKey;
+        if (apiKey) {
+          config.headers["X-API-Key"] = apiKey;
+        }
         if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
           config.headers["X-Request-ID"] = crypto.randomUUID();
         } else {

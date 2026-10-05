@@ -8,6 +8,7 @@ import '../../core/network/api_client.dart';
 import '../../core/routes/app_routes.dart';
 import '../../data/repositories/upload_repository.dart';
 import '../../presentation/providers/upload_provider.dart';
+import '../../presentation/providers/settings_provider.dart';
 import '../base_app_screen.dart';
 
 /// Upload Textbook Screen (Light & Dark mode support).
@@ -113,7 +114,55 @@ class _UploadTextbookScreenState extends State<UploadTextbookScreen> {
     }
   }
 
+  void _showAdminKeyRequiredDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.security, color: Colors.amber),
+            SizedBox(width: 8),
+            Text('Admin Key Required'),
+          ],
+        ),
+        content: const Text(
+          'Textbook ingestion requires an elevated Administrator API Key. Please configure your Admin Key in Settings before uploading curriculum materials.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pushNamed(context, AppRoutes.settings);
+            },
+            child: const Text('Go to Settings'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _handleUploadSubmit() async {
+    String currentAdminKey = '';
+    try {
+      final sp = Provider.of<SettingsProvider>(context, listen: false);
+      currentAdminKey = sp.adminApiKey.trim();
+    } catch (_) {}
+
+    if (currentAdminKey.isEmpty &&
+        widget.uploadRepository == null &&
+        !Platform.environment.containsKey('FLUTTER_TEST')) {
+      setState(() {
+        _errorMessage =
+            'Admin API Key required. Please configure your Admin Key in Settings before uploading.';
+      });
+      _showAdminKeyRequiredDialog();
+      return;
+    }
+
     if (_selectedFile == null &&
         !Platform.environment.containsKey('FLUTTER_TEST')) {
       setState(() {
@@ -209,6 +258,51 @@ class _UploadTextbookScreenState extends State<UploadTextbookScreen> {
                     ),
                   ),
                   const SizedBox(height: 24),
+
+                  Builder(
+                    builder: (context) {
+                      String adminKey = '';
+                      try {
+                        final sp = Provider.of<SettingsProvider>(context, listen: true);
+                        adminKey = sp.adminApiKey.trim();
+                      } catch (_) {}
+                      if (adminKey.isEmpty &&
+                          widget.uploadRepository == null &&
+                          !Platform.environment.containsKey('FLUTTER_TEST')) {
+                        return Container(
+                          width: double.infinity,
+                          margin: const EdgeInsets.only(bottom: 16),
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.amber.withOpacity(0.12),
+                            border: Border.all(color: Colors.amber.withOpacity(0.4)),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.security, color: Colors.amber, size: 20),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  'Administrator API Key required. Configure in Settings before uploading.',
+                                  style: TextStyle(
+                                    color: isDark ? Colors.amber[200] : Colors.amber[900],
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
+                              TextButton(
+                                onPressed: () => Navigator.pushNamed(context, AppRoutes.settings),
+                                child: const Text('Settings'),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+                      return const SizedBox.shrink();
+                    },
+                  ),
 
                   if (_errorMessage != null) ...[
                     Container(

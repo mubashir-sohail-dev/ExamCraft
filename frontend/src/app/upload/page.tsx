@@ -34,6 +34,7 @@ import { SubjectType } from "@/types/exam";
 import { SUBJECTS_CONFIG } from "@/lib/constants";
 import { api, getApiErrorMessage } from "@/lib/api";
 import { useIngestionJob } from "@/hooks/use-ingestion-job";
+import { storage } from "@/lib/storage";
 
 export default function UploadPage() {
   const router = useRouter();
@@ -57,6 +58,7 @@ export default function UploadPage() {
   } = useIngestionJob();
 
   // Form states
+  const [adminKey, setAdminKey] = React.useState<string>("");
   const [selectedSubject, setSelectedSubject] = React.useState<SubjectType>("Chemistry");
   const [selectedGrade, setSelectedGrade] = React.useState<number>(9);
   const [chapterName, setChapterName] = React.useState<string>("");
@@ -65,6 +67,12 @@ export default function UploadPage() {
   const [isUploading, setIsUploading] = React.useState<boolean>(false);
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
   const [showTerminal, setShowTerminal] = React.useState<boolean>(false);
+
+  React.useEffect(() => {
+    setAdminKey(storage.getAdminKey());
+  }, []);
+
+  const hasAdminKey = Boolean(adminKey.trim());
 
   const logsEndRef = React.useRef<HTMLDivElement>(null);
 
@@ -127,6 +135,14 @@ export default function UploadPage() {
       return;
     }
 
+    const currentKey = (storage.getAdminKey() || adminKey).trim();
+    if (!currentKey) {
+      setErrorMessage(
+        "Administrator API Key required. Textbook ingestion requires an elevated administrator key. Please configure your Admin Key in Settings before uploading."
+      );
+      return;
+    }
+
     setErrorMessage(null);
     setIsUploading(true);
 
@@ -179,12 +195,49 @@ export default function UploadPage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <Badge variant="secondary" className="gap-1.5 text-xs py-1 px-2.5 bg-muted">
-            <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
-            <span>Admin Authenticated</span>
-          </Badge>
+          {hasAdminKey ? (
+            <Badge variant="secondary" className="gap-1.5 text-xs py-1 px-2.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+              <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
+              <span>Admin Key Configured</span>
+            </Badge>
+          ) : (
+            <Link href="/settings">
+              <Badge variant="outline" className="gap-1.5 text-xs py-1 px-2.5 text-amber-600 dark:text-amber-400 bg-amber-500/10 border border-amber-500/30 hover:bg-amber-500/20 cursor-pointer">
+                <AlertCircle className="h-3.5 w-3.5 text-amber-500" />
+                <span>Admin Key Required</span>
+              </Badge>
+            </Link>
+          )}
         </div>
       </div>
+
+      {/* Upload Guard Banner when Admin Key is missing */}
+      {!hasAdminKey && (
+        <Card className="border-amber-500/40 bg-amber-50/60 dark:bg-amber-950/20 shadow-xs animate-in fade-in">
+          <CardContent className="p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <div className="p-2 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5">
+                <AlertCircle className="h-5 w-5" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="font-semibold text-sm text-amber-900 dark:text-amber-200">
+                  Administrator API Key Required
+                </h3>
+                <p className="text-xs text-muted-foreground leading-relaxed max-w-2xl">
+                  Curriculum textbook ingestion and vector indexing require elevated administrator privileges.
+                  Uploads are disabled until an Administrator API Key is configured in your browser settings.
+                </p>
+              </div>
+            </div>
+            <Link href="/settings" className="shrink-0 w-full sm:w-auto">
+              <Button size="sm" className="w-full sm:w-auto gap-1.5 text-xs bg-amber-600 hover:bg-amber-700 text-white dark:bg-amber-500 dark:hover:bg-amber-600">
+                <span>Configure in Settings</span>
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Contextual Diagnostic Error Alert (Replaces harsh red banner) */}
       {activeError && (
@@ -528,7 +581,7 @@ export default function UploadPage() {
             <Button
               size="default"
               onClick={startIngestion}
-              disabled={isUploading || isJobActive || !selectedFile}
+              disabled={isUploading || isJobActive || !selectedFile || !hasAdminKey}
               className="gap-2 shadow-xs text-xs"
             >
               {isUploading ? (

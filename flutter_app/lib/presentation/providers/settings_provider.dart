@@ -18,6 +18,7 @@ class SettingsProvider extends ChangeNotifier {
 
   String get baseUrl => _settings.baseUrl;
   String get clientApiKey => _settings.clientApiKey;
+  String get adminApiKey => _settings.adminApiKey;
   bool get isDarkMode => _settings.isDarkMode;
   bool get enableTelemetry => _settings.enableTelemetry;
   bool get includeAnswerKey => _settings.includeAnswerKey;
@@ -39,6 +40,7 @@ class SettingsProvider extends ChangeNotifier {
       if (apiClient != null) {
         apiClient!.updateBaseUrl(_settings.baseUrl);
         apiClient!.updateClientApiKey(_settings.clientApiKey);
+        apiClient!.updateAdminApiKey(_settings.adminApiKey);
       }
     } catch (e) {
       _errorMessage = 'Failed to load settings: ${e.toString()}';
@@ -61,12 +63,23 @@ class SettingsProvider extends ChangeNotifier {
 
   Future<void> updateClientApiKey(String newKey) async {
     final cleanKey = newKey.trim();
-    if (cleanKey.isEmpty || cleanKey == _settings.clientApiKey) return;
+    if (cleanKey == _settings.clientApiKey) return;
 
     final updated = _settings.copyWith(clientApiKey: cleanKey);
     await _saveAndNotify(updated);
     if (apiClient != null) {
       apiClient!.updateClientApiKey(cleanKey);
+    }
+  }
+
+  Future<void> updateAdminApiKey(String newKey) async {
+    final cleanKey = newKey.trim();
+    if (cleanKey == _settings.adminApiKey) return;
+
+    final updated = _settings.copyWith(adminApiKey: cleanKey);
+    await _saveAndNotify(updated);
+    if (apiClient != null) {
+      apiClient!.updateAdminApiKey(cleanKey);
     }
   }
 
@@ -119,6 +132,7 @@ class SettingsProvider extends ChangeNotifier {
       if (apiClient != null) {
         apiClient!.updateBaseUrl(_settings.baseUrl);
         apiClient!.updateClientApiKey(_settings.clientApiKey);
+        apiClient!.updateAdminApiKey(_settings.adminApiKey);
       }
     } catch (e) {
       _errorMessage = 'Failed to reset settings: ${e.toString()}';

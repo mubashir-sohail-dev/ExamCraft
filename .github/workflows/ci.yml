@@ -45,15 +45,15 @@ jobs:
 
       - name: Run Pytest Test Suite
         env:
-          API_KEY: examcraft-secret-key-2026
-          ADMIN_API_KEY: examcraft-admin-key-2026
+          API_KEY: ci-client-test-key-592f6b8a1c3d4e7f
+          ADMIN_API_KEY: ci-admin-test-key-8a2f4c9e7b1a3d5e
           ENABLE_AUTH: "true"
           QDRANT_URL: http://localhost:6333
-          LLM_API_KEY: ci-mock-key
+          LLM_API_KEY: ci-mock-gemini-key
           LLM_MODEL_NAME: gemini-3.8-flash
           LOG_LEVEL: INFO
         run: |
-          pytest tests/ -v
+          python -m pytest tests/ -v
 
   frontend-lint:
     name: Frontend Lint & Typecheck
@@ -79,6 +79,7 @@ jobs:
         run: |
           npm ci
 
-      - name: Run Next.js ESLint
+      - name: Run Next.js ESLint & Production Build
         run: |
           npm run lint
+          npm run build

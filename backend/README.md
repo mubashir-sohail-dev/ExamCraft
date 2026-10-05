@@ -6,11 +6,11 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688.svg?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![Qdrant](https://img.shields.io/badge/Qdrant-Hybrid_Vector_DB-DC2626.svg?logo=qdrant&logoColor=white)](https://qdrant.tech)
 [![Gemini](https://img.shields.io/badge/Gemini-3.8_Flash-4285F4.svg?logo=google&logoColor=white)](https://deepmind.google/technologies/gemini/)
-[![Pytest](https://img.shields.io/badge/Pytest-68%2F68_Passed-success.svg?logo=pytest&logoColor=white)](tests/)
+[![Pytest](https://img.shields.io/badge/Pytest-119%2F119_Passed-success.svg?logo=pytest&logoColor=white)](tests/)
 [![Pydantic v2](https://img.shields.io/badge/Pydantic-v2.8+-E92063.svg?logo=pydantic&logoColor=white)](https://docs.pydantic.dev/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](../LICENSE)
 
-> **Zero-hallucination, curriculum-grounded examination paper generation engine and high-performance vector retrieval backend. Built with FastAPI, Qdrant Hybrid Search (Dense BGE + Sparse BM25), Instructor-enforced Gemini 3.8 Flash, and ReportLab PDF compilation.**
+> **Citation-grounded, verifiable assessment paper generation engine and high-performance vector retrieval backend. Built with FastAPI, Qdrant Hybrid Search (Dense BGE + Sparse BM25), Instructor-enforced Gemini 3.8 Flash, and ReportLab PDF compilation.**
 
 ---
 
@@ -796,9 +796,9 @@ python tests/verify_all.py
 
 ---
 
-### 68/68 Test Breakdown Across 11 Test Files
+### 119/119 Test Breakdown Across 16 Test Files
 
-ExamCraft AI maintains an uncompromising **100% pass rate (68/68 tests passed)** across 11 test modules:
+ExamCraft AI maintains an uncompromising **100% pass rate (119/119 tests passed in ~1.9s local / ~3.5s CI execution)** across 16 test modules:
 
 | Test File | Tests | Core Architectural Validations |
 | :--- | :---: | :--- |
@@ -808,12 +808,17 @@ ExamCraft AI maintains an uncompromising **100% pass rate (68/68 tests passed)**
 | [`test_concurrency_llm.py`](tests/test_concurrency_llm.py) | **4** | Concurrent execution timing verification (completes under 0.55s vs 0.90s sequential), dynamic sequential question re-indexing (1..N), total marks calculation, empty section skipping, failure propagation. |
 | [`test_zero_placeholder.py`](tests/test_zero_placeholder.py) | **4** | Missing context raises 404 with zero mock data, Qdrant outage raises 500 without dummy fallback, LLM timeout raises 500, regex scanning for forbidden placeholder tokens (`Sample MCQ`, `Lorem ipsum`). |
 | [`test_endpoints.py`](tests/test_endpoints.py) | **7** | `POST /api/tests/draft` mocked success, 404 on missing context, 400 on missing topic query, `POST /api/tests/render-pdf` binary stream validation, 400 on 0 questions, 400 on non-PDF upload, 400 on empty PDF. |
+| [`test_grounding_verification.py`](tests/test_grounding_verification.py) | **8** | Retrieval chunk tagging (`[CHUNK #N]`), chunk ID and cited quote verification, detection of hallucinated chunk IDs, detection of fabricated citations, 404 model fallback to `gemini-2.5-flash`, and synthetic 50-question eval (>95% grounded). |
+| [`test_rate_limiting.py`](tests/test_rate_limiting.py) | **7** | SlowAPI route rate limits (5/min draft, 2/min upload), thread-safe `DailyBudgetGuard` (200 requests/day cap returning 429 + `Retry-After`), UTC midnight counter reset, health endpoint exclusion. |
+| [`test_config.py`](tests/test_config.py) | **12** | Production fail-fast startup validator rejecting known default demo secrets when `ENVIRONMENT=production` or `STRICT_SECURITY=true`, entropy checks, distinct client/admin keys. |
+| [`test_challenger_stress.py`](tests/test_challenger_stress.py) | **2** | High-concurrency challenger load, rapid burst verification, memory leaks and thread safety. |
+| [`test_legacy.py`](tests/test_legacy.py) | **2** | Backward compatibility with legacy test synthesis payloads and PDF rendering. |
 | [`test_metadata.py`](tests/test_metadata.py) | **3** | `GET /api/subjects` returns supported list, `GET /api/subjects/{subject}/chapters` returns indexed chapters, Grade parameter filtering and multi-class database isolation. |
 | [`test_health.py`](tests/test_health.py) | **1** | `GET /api/health` 200 OK schema verification, Qdrant latency reporting, uptime counter, and version metadata. |
 | [`test_security.py`](tests/test_security.py) | **9** | Public health access without key, 401 on missing key, 403 on invalid key, 200 on valid client key, 403 on client key calling admin route, admin key bypass, OWASP security headers inspection, fake PDF magic byte check, grade bounds 422 check. |
 | [`test_subject_conditional_pipeline.py`](tests/test_subject_conditional_pipeline.py) | **15** | Mathematics vs Science OCR prompt differentiation, `omniroute_ocr_page` subject injection, Math 3-rule extractor, Science 0-rule clean payload, `chunk_textbook` metadata isolation, `extract_text_from_pdf` subject guard, non-Math fast short-circuit in `get_chapter_metadata`, Math Qdrant facet query, Physics SI units guidelines, Chemistry balanced equation guidelines, Biology cellular guidelines, Computer Science syntax guidelines, Mathematics rigor guidelines. |
 | [`test_adversarial_challenger.py`](tests/test_adversarial_challenger.py) | **9** | Empty context 404, whitespace-only context 404, Qdrant cluster connection crash 500, LLM timeout 500, rate limit (429) propagation, malformed JSON deserialization error, `asyncio.gather` coroutine failure propagation, PDF render 422 on invalid payload, admin upload empty file rejection. |
-| **Total Test Suite** | **68** | **100% Passed (0 Failures, 0 Regressions, 0 Mocks in Production)** |
+| **Total Test Suite** | **119** | **100% Passed (0 Failures, 0 Regressions, 0 Mocks in Production)** |
 
 ---
 

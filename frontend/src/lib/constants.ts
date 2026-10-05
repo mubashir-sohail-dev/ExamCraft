@@ -8,7 +8,6 @@ import { Atom, FlaskConical, Calculator, Dna, Laptop, LucideIcon } from "lucide-
 
 export const DEFAULT_API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 export const DEFAULT_CLIENT_KEY = process.env.NEXT_PUBLIC_CLIENT_KEY || "examcraft-secret-key-2026";
-export const DEFAULT_ADMIN_KEY = process.env.NEXT_PUBLIC_ADMIN_KEY || "examcraft-admin-key-2026";
 
 export const QUESTION_WEIGHTS = {
   MCQ: 1,

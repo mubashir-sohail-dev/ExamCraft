@@ -38,8 +38,8 @@ class NotFoundException extends ApiException {
 
 /// Centralized Dio-backed HTTP API Client for FastAPI backend.
 class ApiClient {
-  static const String defaultClientApiKey = 'examcraft-secret-key-2026';
-  static const String defaultAdminApiKey = 'examcraft-admin-key-2026';
+  static const String defaultClientApiKey = '';
+  static const String defaultAdminApiKey = '';
 
   late final Dio _dio;
   String _baseUrl;

@@ -254,7 +254,7 @@ flowchart TD
 - **Role**: Connection configuration, diagnostic tools, and system specifications.
 - **Key Elements**:
   - **Endpoint Overrides**: Configure custom backend URLs (e.g., `http://localhost:8000` or production endpoints).
-  - **API Key Management**: Secure configuration for Client API Key (`NEXT_PUBLIC_CLIENT_KEY`) and Admin Key (`NEXT_PUBLIC_ADMIN_KEY`).
+  - **API Key Management**: Secure configuration for Client API Key (`NEXT_PUBLIC_CLIENT_KEY`) and Administrator API Key (configured strictly in browser LocalStorage).
   - **Live Connection Tester**: Ping the configured backend URL with a diagnostic roundtrip latency measurement.
   - **Storage Management**: Individual triggers to clear the active draft, delete recent papers, clear the question bank, or perform a full factory reset.
   - **Architecture Manual (`/about`)**: Detailed breakdown of the zero-hallucination RAG pipeline, vector search parameters, and model specifications.
@@ -420,10 +420,9 @@ Configure environment variables in `frontend/.env.local` to override default set
 | :--- | :--- | :---: | :--- |
 | `NEXT_PUBLIC_API_URL` | `http://localhost:8000` | No | Base URL of the ExamCraft FastAPI backend service. |
 | `NEXT_PUBLIC_CLIENT_KEY` | `examcraft-secret-key-2026` | No | Secret authentication key transmitted in the `X-API-Key` header for client routes. |
-| `NEXT_PUBLIC_ADMIN_KEY` | `examcraft-admin-key-2026` | No | Elevated administrative key transmitted in the `X-API-Key` header for `/api/admin/*` routes. |
 
-> [!NOTE]
-> All settings configured via environment variables can also be dynamically overridden at runtime via the **Settings Page** (`/settings`), which persists custom configurations to the user's LocalStorage.
+> [!SECURITY]
+> **Admin API Key Hygiene**: The elevated Administrator API Key is **never** exposed as a public environment variable (`NEXT_PUBLIC_*`) or bundled into client JavaScript. Administrators configure their key directly via the **Settings Page** (`/settings`), where it is stored exclusively in browser `localStorage` (`examcraft_admin_key`) and injected on demand for `/api/admin/*` routes.
 
 ---
 

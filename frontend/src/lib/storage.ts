@@ -8,11 +8,11 @@ import { Class9TestSchema, SavedTestRecord, QuestionBankItem } from "@/types/exa
 import {
   DEFAULT_API_URL,
   DEFAULT_CLIENT_KEY,
-  DEFAULT_ADMIN_KEY,
 } from "./constants";
 
 const STORAGE_KEYS = {
   SETTINGS: "examcraft_settings",
+  ADMIN_KEY: "examcraft_admin_key",
   ACTIVE_DRAFT: "examcraft_active_draft",
   RECENT_PAPERS: "examcraft_recent_papers",
   QUESTION_BANK: "examcraft_question_bank",
@@ -21,7 +21,7 @@ const STORAGE_KEYS = {
 export const DEFAULT_SETTINGS: AppSettings = {
   apiBaseUrl: DEFAULT_API_URL,
   clientApiKey: DEFAULT_CLIENT_KEY,
-  adminApiKey: DEFAULT_ADMIN_KEY,
+  adminApiKey: "",
   theme: "system",
   defaultSubject: "Chemistry",
   enableTelemetry: true,
@@ -33,18 +33,51 @@ function isClient(): boolean {
   return typeof window !== "undefined" && typeof window.localStorage !== "undefined";
 }
 
+export function getAdminKey(): string {
+  if (!isClient()) return "";
+  try {
+    return (localStorage.getItem(STORAGE_KEYS.ADMIN_KEY) || "").trim();
+  } catch {
+    return "";
+  }
+}
+
+export function setAdminKey(key: string): void {
+  if (!isClient()) return;
+  try {
+    const cleanKey = key.trim();
+    localStorage.setItem(STORAGE_KEYS.ADMIN_KEY, cleanKey);
+    const stored = localStorage.getItem(STORAGE_KEYS.SETTINGS);
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored) as Partial<AppSettings>;
+        parsed.adminApiKey = cleanKey;
+        localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(parsed));
+      } catch {}
+    }
+  } catch (e) {
+    console.error("Failed to save admin key:", e);
+  }
+}
+
 export function getSettings(): AppSettings {
   if (!isClient()) return DEFAULT_SETTINGS;
   try {
     const stored = localStorage.getItem(STORAGE_KEYS.SETTINGS);
-    if (!stored) return DEFAULT_SETTINGS;
+    const adminKey = getAdminKey();
+    if (!stored) {
+      return {
+        ...DEFAULT_SETTINGS,
+        adminApiKey: adminKey,
+      };
+    }
     const parsed = JSON.parse(stored) as Partial<AppSettings>;
     return {
       ...DEFAULT_SETTINGS,
       ...parsed,
       apiBaseUrl: (parsed.apiBaseUrl || DEFAULT_SETTINGS.apiBaseUrl).trim().replace(/\/+$/, ""),
       clientApiKey: (parsed.clientApiKey || DEFAULT_SETTINGS.clientApiKey).trim(),
-      adminApiKey: (parsed.adminApiKey || DEFAULT_SETTINGS.adminApiKey).trim(),
+      adminApiKey: adminKey || (parsed.adminApiKey || "").trim(),
     };
   } catch {
     return DEFAULT_SETTINGS;
@@ -63,6 +96,9 @@ export function saveSettings(updates: Partial<AppSettings>): AppSettings {
   }
   if (typeof next.adminApiKey === "string") {
     next.adminApiKey = next.adminApiKey.trim();
+    try {
+      localStorage.setItem(STORAGE_KEYS.ADMIN_KEY, next.adminApiKey);
+    } catch {}
   }
   try {
     localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(next));
@@ -260,6 +296,8 @@ export const clearAllStorage = clearAllCache;
 export const storage = {
   getSettings,
   saveSettings,
+  getAdminKey,
+  setAdminKey,
   getActiveDraft,
   saveActiveDraft,
   clearActiveDraft,

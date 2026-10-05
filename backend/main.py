@@ -6,8 +6,11 @@ from core.logger import setup_logging
 from core.lifespan import lifespan
 from core.middleware import RequestTrackingMiddleware
 from core.security import verify_api_key, verify_admin_key
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from core.limiter import limiter
 from core.exceptions import ExamCraftException, examcraft_exception_handler, generic_exception_handler
-from routers import generation, pdf_router, upload, metadata, health
+from routers import assessments, admin, pdf_router, metadata, health
 from schemas.request_schemas import TestGenerationRequest, PDFRenderRequest
 
 # 1. Initialize logging
@@ -58,14 +61,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 4. Register Exception Handlers
+# 4. Register Rate Limiter & Exception Handlers
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_exception_handler(ExamCraftException, examcraft_exception_handler)
 app.add_exception_handler(Exception, generic_exception_handler)
 
 # 5. Include API Routers
-app.include_router(generation.router)
+app.include_router(assessments.router)
 app.include_router(pdf_router.router)
-app.include_router(upload.router)
+app.include_router(admin.router)
 app.include_router(metadata.router)
 app.include_router(health.router)
 
@@ -77,9 +82,10 @@ app.include_router(health.router)
 # =============================================================================
 
 @app.post("/api/draft-test", tags=["Legacy Compatibility"], dependencies=[Depends(verify_api_key)], include_in_schema=True)
+@limiter.limit("5/minute;50/hour")
 async def legacy_draft_test(payload: TestGenerationRequest, request: Request):
     """Legacy route alias for POST /api/tests/draft."""
-    return await generation.draft_test_endpoint(payload=payload, request=request)
+    return await assessments.generate_draft_test(payload=payload, request=request)
 
 
 @app.post("/api/render-pdf", tags=["Legacy Compatibility"], dependencies=[Depends(verify_api_key)], include_in_schema=True)
@@ -89,14 +95,15 @@ def legacy_render_pdf(payload: PDFRenderRequest):
 
 
 @app.post("/api/upload-textbook", tags=["Legacy Compatibility"], dependencies=[Depends(verify_admin_key)], include_in_schema=True)
-def legacy_upload_textbook(
+@limiter.limit("2/minute")
+async def legacy_upload_textbook(
     request: Request,
     file: UploadFile = File(...),
     subject: str = Form("Chemistry"),
     grade: int = Form(9)
 ):
     """Legacy route alias for POST /api/admin/upload-textbook."""
-    return upload.upload_textbook_endpoint(request=request, file=file, subject=subject, grade=grade)
+    return await admin.upload_textbook(request=request, file=file, subject=subject, grade=grade)
 
 
 if __name__ == "__main__":

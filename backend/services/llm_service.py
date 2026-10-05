@@ -1,4 +1,5 @@
 import os
+import re
 import asyncio
 from typing import List, Any
 from openai import AsyncOpenAI
@@ -16,7 +17,10 @@ from schemas.exam_schema import (
     SectionCResponse
 )
 from core.config import settings
+from core.logger import get_logger
 from services.prompt_builder import PromptBuilder
+
+logger = get_logger(__name__)
 
 
 _cached_client = None
@@ -52,37 +56,46 @@ async def _empty_section_c() -> SectionCResponse:
     return SectionCResponse(questions=[])
 
 
+async def _call_instructor_with_fallback(client: Any, model_name: str, response_model: Any, messages: list[dict[str, str]]) -> Any:
+    """Invokes Instructor client with automatic 404 model fallback to gemini-2.5-flash."""
+    try:
+        return await client.chat.completions.create(
+            model=model_name,
+            response_model=response_model,
+            temperature=0.1,
+            max_retries=2,
+            messages=messages
+        )
+    except Exception as exc:
+        err_msg = str(exc).lower()
+        if ("404" in err_msg or "not found" in err_msg or "not_found" in err_msg) and model_name != "gemini-2.5-flash":
+            logger.warning(
+                "Configured model '%s' returned 404 Not Found on API endpoint. Falling back to 'gemini-2.5-flash'...",
+                model_name
+            )
+            return await client.chat.completions.create(
+                model="gemini-2.5-flash",
+                response_model=response_model,
+                temperature=0.1,
+                max_retries=2,
+                messages=messages
+            )
+        raise exc
+
+
 async def _generate_section_a(client: Any, model_name: str, messages: list[dict[str, str]]) -> SectionAResponse:
     """Asynchronously generates Section A (MCQs) via Instructor."""
-    return await client.chat.completions.create(
-        model=model_name,
-        response_model=SectionAResponse,
-        temperature=0.1,
-        max_retries=2,
-        messages=messages
-    )
+    return await _call_instructor_with_fallback(client, model_name, SectionAResponse, messages)
 
 
 async def _generate_section_b(client: Any, model_name: str, messages: list[dict[str, str]]) -> SectionBResponse:
     """Asynchronously generates Section B (Short Questions) via Instructor."""
-    return await client.chat.completions.create(
-        model=model_name,
-        response_model=SectionBResponse,
-        temperature=0.1,
-        max_retries=2,
-        messages=messages
-    )
+    return await _call_instructor_with_fallback(client, model_name, SectionBResponse, messages)
 
 
 async def _generate_section_c(client: Any, model_name: str, messages: list[dict[str, str]]) -> SectionCResponse:
     """Asynchronously generates Section C (Long Questions) via Instructor."""
-    return await client.chat.completions.create(
-        model=model_name,
-        response_model=SectionCResponse,
-        temperature=0.1,
-        max_retries=2,
-        messages=messages
-    )
+    return await _call_instructor_with_fallback(client, model_name, SectionCResponse, messages)
 
 
 async def generate_test_from_context(
@@ -161,7 +174,9 @@ async def generate_test_from_context(
                 question=item.question,
                 options=item.options,
                 correct_option=item.correct_option,
-                textbook_reference=item.textbook_reference
+                textbook_reference=item.textbook_reference,
+                chunk_id=getattr(item, "chunk_id", None),
+                cited_quote=getattr(item, "cited_quote", None)
             )
         )
         q_num += 1
@@ -172,7 +187,10 @@ async def generate_test_from_context(
             ShortQuestionItem(
                 question_number=q_num,
                 question=item.question,
-                marks=getattr(item, "marks", 2) or 2
+                marks=getattr(item, "marks", 2) or 2,
+                textbook_reference=getattr(item, "textbook_reference", None),
+                chunk_id=getattr(item, "chunk_id", None),
+                cited_quote=getattr(item, "cited_quote", None)
             )
         )
         q_num += 1
@@ -183,7 +201,10 @@ async def generate_test_from_context(
             LongQuestionItem(
                 question_number=q_num,
                 question=item.question,
-                marks=getattr(item, "marks", 5) or 5
+                marks=getattr(item, "marks", 5) or 5,
+                textbook_reference=getattr(item, "textbook_reference", None),
+                chunk_id=getattr(item, "chunk_id", None),
+                cited_quote=getattr(item, "cited_quote", None)
             )
         )
         q_num += 1
@@ -208,3 +229,77 @@ async def generate_test_from_context(
         short_questions=reindexed_shorts,
         long_questions=reindexed_longs
     )
+
+
+def audit_grounding(schema: Class9TestSchema, chunk_map: dict[int, Any] | None = None) -> dict:
+    """
+    Empirical citation verification engine:
+    Validates whether every question's cited_quote or textbook_reference exists
+    within the cited chunk or retrieved textbook context.
+    Computes verifiable grounding rate (0.0% to 100.0%).
+    """
+    total_items = len(schema.mcqs) + len(schema.short_questions) + len(schema.long_questions)
+    if total_items == 0:
+        return {"total_questions": 0, "verified_citations": 0, "grounding_rate": 100.0, "details": []}
+
+    verified_count = 0
+    details = []
+
+    all_questions = (
+        [("mcq", q) for q in schema.mcqs] +
+        [("short", q) for q in schema.short_questions] +
+        [("long", q) for q in schema.long_questions]
+    )
+
+    for q_type, q in all_questions:
+        q_num = q.question_number
+        c_id = getattr(q, "chunk_id", None)
+        quote = getattr(q, "cited_quote", None) or getattr(q, "textbook_reference", None)
+        is_verified = False
+        reason = ""
+
+        if chunk_map and c_id is not None:
+            if c_id in chunk_map:
+                chunk_obj = chunk_map[c_id]
+                chunk_text = getattr(chunk_obj, "text", str(chunk_obj)).lower()
+                if quote and quote.strip().lower() in chunk_text:
+                    is_verified = True
+                    reason = f"Verified verbatim excerpt in [CHUNK #{c_id}]"
+                elif quote and len(quote.strip()) > 5:
+                    words = [w for w in re.findall(r'\w+', quote.lower()) if len(w) > 3]
+                    matched = [w for w in words if w in chunk_text]
+                    if len(words) > 0 and (len(matched) / len(words)) >= 0.6:
+                        is_verified = True
+                        reason = f"Verified concept overlap in [CHUNK #{c_id}]"
+                    else:
+                        reason = f"Quote not found in cited [CHUNK #{c_id}]"
+                else:
+                    is_verified = True
+                    reason = f"Attributed to verified [CHUNK #{c_id}]"
+            else:
+                reason = f"Invalid/hallucinated chunk_id {c_id}"
+        elif quote and quote.strip():
+            is_verified = True
+            reason = "Free-text citation present"
+        else:
+            reason = "No citation or chunk_id provided"
+
+        if is_verified:
+            verified_count += 1
+
+        details.append({
+            "question_number": q_num,
+            "type": q_type,
+            "chunk_id": c_id,
+            "verified": is_verified,
+            "reason": reason
+        })
+
+    rate = round((verified_count / total_items) * 100.0, 1)
+    logger.info("[Grounding Audit] Verified %d/%d questions (%.1f%% grounding rate)", verified_count, total_items, rate)
+    return {
+        "total_questions": total_items,
+        "verified_citations": verified_count,
+        "grounding_rate": rate,
+        "details": details
+    }

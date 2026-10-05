@@ -6,13 +6,90 @@ Handles vector embeddings, collection management, hybrid retrieval, and textbook
 import hashlib
 import re
 import time
-from typing import List, Dict, Any
+from dataclasses import dataclass
+from typing import List, Dict, Any, Optional, Tuple
 from qdrant_client import QdrantClient
 from qdrant_client.http import models
 from core.config import settings
 from core.logger import get_logger
 
 logger = get_logger(__name__)
+
+
+@dataclass
+class RetrievedChunk:
+    """Represents an attributed, verifiable context chunk extracted from Qdrant vector store."""
+    chunk_id: int
+    text: str
+    chapter: str
+    page_number: Optional[int] = None
+    exercise: Optional[str] = None
+    score: float = 1.0
+
+
+def format_chunk_context(chunks: List[RetrievedChunk], max_chars: int = 12000) -> Tuple[str, Dict[int, RetrievedChunk]]:
+    """
+    Formats a list of RetrievedChunk objects with explicit [CHUNK #X] markers up to max_chars.
+    Returns the concatenated context string and a dictionary mapping chunk_id to RetrievedChunk.
+    """
+    formatted_parts = []
+    chunk_map: Dict[int, RetrievedChunk] = {}
+    total_len = 0
+
+    for idx, c in enumerate(chunks, 1):
+        c.chunk_id = idx
+        meta_parts = [f"Chapter: {c.chapter}"]
+        if c.page_number is not None:
+            meta_parts.append(f"Page: {c.page_number}")
+        if c.exercise:
+            meta_parts.append(f"Exercise: {c.exercise}")
+
+        header = f"[CHUNK #{idx}] ({', '.join(meta_parts)})"
+        block = f"{header}\n{c.text}"
+
+        if total_len + len(block) > max_chars and formatted_parts:
+            break
+
+        formatted_parts.append(block)
+        chunk_map[idx] = c
+        total_len += len(block) + 2
+
+    return "\n\n".join(formatted_parts), chunk_map
+
+
+def parse_text_into_chunks(raw_text: str, default_chapter: str = "General", max_chars: int = 12000) -> Tuple[str, Dict[int, RetrievedChunk]]:
+    """
+    Normalizes raw textbook context into indexed RetrievedChunk objects with [CHUNK #X] markers.
+    If markers already exist, extracts the existing chunks.
+    Otherwise splits paragraphs into tagged chunks.
+    """
+    if not raw_text or not raw_text.strip():
+        return "", {}
+
+    if "[CHUNK #" in raw_text:
+        chunk_pattern = re.compile(r'\[CHUNK #(\d+)\]\s*(?:\((.*?)\))?\s*\n(.*?)(?=\n\[CHUNK #|\Z)', re.DOTALL)
+        matches = chunk_pattern.findall(raw_text)
+        if matches:
+            chunk_map: Dict[int, RetrievedChunk] = {}
+            for num_str, meta_str, text_content in matches:
+                cid = int(num_str)
+                chunk_map[cid] = RetrievedChunk(
+                    chunk_id=cid,
+                    text=text_content.strip(),
+                    chapter=default_chapter
+                )
+            return raw_text, chunk_map
+
+    paragraphs = [p.strip() for p in re.split(r'\n\s*\n', raw_text) if p.strip()]
+    if not paragraphs:
+        paragraphs = [raw_text.strip()]
+
+    chunks = [
+        RetrievedChunk(chunk_id=i, text=p, chapter=default_chapter)
+        for i, p in enumerate(paragraphs, 1)
+    ]
+    return format_chunk_context(chunks, max_chars=max_chars)
+
 
 
 def get_qdrant_client(url: str | None = None, api_key: str | None = None) -> QdrantClient:

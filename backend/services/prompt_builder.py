@@ -298,11 +298,15 @@ class PromptBuilder:
 
     @staticmethod
     def _get_generation_constraints() -> str:
-        return """### STRICT RULES FOR ACCURACY:
+        return """### STRICT RULES FOR ACCURACY & GROUNDING:
 1. **100% GROUNDED:** Every single question, MCQ distractor, correct answer, and numeric value MUST be explicitly verified by the text inside <textbook_context>.
-2. **NO OUTSIDE KNOWLEDGE:** Do NOT use any knowledge, definitions, formulas, or facts that are not present in <textbook_context>. If a concept is omitted in the context, do NOT test it.
-3. **SYLLABUS BOUNDARIES:** Do not make questions harder or broader than what the provided textbook content covers.
-4. **INSUFFICIENT CONTEXT FALLBACK:** If the provided context is too brief to generate the requested number of questions, generate ONLY as many valid questions as can be strictly verified."""
+2. **VERIFIABLE CITATION ATTRIBUTION:**
+   - When <textbook_context> contains `[CHUNK #N]` markers, set `chunk_id` to the integer ID of the chunk where the concept appears.
+   - Set `cited_quote` to an exact verbatim quote (10-30 words) directly from that chunk.
+   - Set `textbook_reference` to the human-readable reference (e.g., 'Chapter 1, Page 12, Exercise 1.1').
+3. **NO OUTSIDE KNOWLEDGE:** Do NOT use any knowledge, definitions, formulas, or facts that are not present in <textbook_context>. If a concept is omitted in the context, do NOT test it.
+4. **SYLLABUS BOUNDARIES:** Do not make questions harder or broader than what the provided textbook content covers.
+5. **INSUFFICIENT CONTEXT FALLBACK:** If the provided context is too brief to generate the requested number of questions, generate ONLY as many valid questions as can be strictly verified."""
 
     @classmethod
     def _get_subject_guidance(cls, subject: str) -> str:

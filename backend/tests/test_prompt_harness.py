@@ -81,7 +81,7 @@ def test_exact_ordering():
     
     # Check ordering
     req_pos = user_content.find("### TEST REQUIREMENTS:")
-    constraints_pos = user_content.find("### STRICT RULES FOR ACCURACY:")
+    constraints_pos = user_content.find("### STRICT RULES FOR ACCURACY")
     diff_pos = user_content.find("### COGNITIVE DIFFICULTY LEVEL:")
     exercise_pos = user_content.find("### EXERCISE FOCUS:")
     context_pos = user_content.rfind("<textbook_context>")

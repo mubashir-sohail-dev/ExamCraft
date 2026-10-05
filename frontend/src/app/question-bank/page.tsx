@@ -320,7 +320,7 @@ export default function QuestionBankPage() {
                         {q.marks || (qType === "mcq" ? 1 : qType === "short" ? 2 : 5)} Mark{q.marks === 1 ? "" : "s"}
                       </span>
                       <Button
-                        size="icon-xs"
+                        size="icon-sm"
                         variant="ghost"
                         onClick={() => handleCopyQuestion(q.question || q.question_text || "")}
                         title="Copy question text"
@@ -328,7 +328,7 @@ export default function QuestionBankPage() {
                         <Copy className="h-3.5 w-3.5 text-muted-foreground" />
                       </Button>
                       <Button
-                        size="xs"
+                        size="sm"
                         variant="outline"
                         onClick={() => handleAddToDraft(q)}
                         className="gap-1 text-[11px] h-6 px-2"
@@ -338,7 +338,7 @@ export default function QuestionBankPage() {
                         <span>Add to Draft</span>
                       </Button>
                       <Button
-                        size="icon-xs"
+                        size="icon-sm"
                         variant="ghost"
                         onClick={() => handleDelete(q.id)}
                         className="text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/40"
@@ -351,7 +351,7 @@ export default function QuestionBankPage() {
 
                   {/* Question Prompt */}
                   <div className="text-xs sm:text-sm text-foreground font-medium leading-relaxed">
-                    <HtmlRenderer html={q.question || q.question_text || ""} />
+                    <HtmlRenderer content={q.question || q.question_text || ""} />
                   </div>
 
                   {/* MCQ Options Grid */}
