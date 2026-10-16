@@ -66,6 +66,8 @@ While the **ExamCraft Flutter Mobile App** (`flutter_app/`) is engineered for ra
 2. **Institutional Examination Coordinators**: Formulating standardized term tests across multiple grades (Classes 9, 10, 11, and 12) adhering to provincial board schemas (PCTB, FBISE, STBB, KP-TB).
 3. **Curriculum & Data Administrators**: Uploading, parsing, and vector-indexing official curriculum textbooks through an asynchronous ingestion engine with real-time terminal telemetry.
 
+> 📱 **Looking for mobile screenshots?** View the [Flutter Mobile App Interface Showcase](../flutter_app/README.md#visual-interface-showcase) or the [Main Visual Showcase](../README.md#-visual-showcase-flutter-mobile-app--authentic-board-paper) featuring the mobile teacher dashboard, curriculum filters, and compiled A4 paper outputs.
+
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
 │                        ExamCraft AI Monorepo                           │

@@ -21,6 +21,7 @@
 - [2. Key Capabilities & Feature Matrix](#2-key-capabilities--feature-matrix)
 - [3. System Architecture & Topology](#3-system-architecture--topology)
 - [4. Screen Hubs & Navigation Architecture](#4-screen-hubs--navigation-architecture)
+  - [Visual Interface Showcase](#visual-interface-showcase)
   - [11 Core Screen Hubs](#11-core-screen-hubs)
   - [26 Interactive UI State Variants](#26-interactive-ui-state-variants)
 - [5. State Management & Unidirectional Data Flow](#5-state-management--unidirectional-data-flow)
@@ -136,6 +137,35 @@ flowchart TD
 ## 4. Screen Hubs & Navigation Architecture
 
 The routing engine in [`lib/core/routes/app_routes.dart`](lib/core/routes/app_routes.dart) maps **11 core routes** alongside dynamic sub-route aliases, query parameter parsers, and custom Material route transitions.
+ 
+### 📸 Visual Interface Showcase
+
+<div align="center">
+  <table>
+    <thead>
+      <tr>
+        <th align="center" width="50%">📱 1. HomeScreen & Live Telemetry Dashboard</th>
+        <th align="center" width="50%">⚙️ 2. Assessment Configurator & Curriculum Filters</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr valign="top">
+        <td align="center">
+          <img src="../docs/assets/mobile_dashboard.jpg" alt="ExamCraft AI Mobile Dashboard" width="300" />
+          <br /><br />
+          <em>OLED Dark Theme showcasing live FastAPI server latency (<code>Connected 1276ms</code>), curriculum counters (Total Classes: 3, Active Subjects: 5, Generated Papers: 13), and single-tap generation triggers.</em>
+        </td>
+        <td align="center">
+          <img src="../docs/assets/mobile_generator.jpg" alt="ExamCraft AI Mobile Generator" width="300" />
+          <br /><br />
+          <em>Curriculum subject pills (Chemistry active), Class 9–12 filters, Chapter/Topic scope selector, Chapter dropdown, optional teacher instructions, and dynamic question distribution slider.</em>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+---
 
 ### 11 Core Screen Hubs
 

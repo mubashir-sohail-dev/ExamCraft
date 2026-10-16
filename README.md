@@ -142,13 +142,39 @@ Every generated item is tethered to an authentic textbook excerpt. If a concept 
 
 ---
 
-### 📸 Visual Showcase: Authentic A4 Assessment Paper Output
+### 📸 Visual Showcase: Flutter Mobile App & Authentic Board Paper
 
-Below is an authentic Class 9 Mathematics assessment paper (Matrices & Determinants) rendered in-memory by ExamCraft AI's ReportLab vector PDF engine:
+ExamCraft AI bridges mobile usability for teachers on the move with desktop-grade assessment generation and print-ready vector PDF compilation:
 
 <div align="center">
-  <img src="docs/assets/sample_exam_paper.png" alt="ExamCraft AI Generated A4 Assessment Paper" width="620" />
-  <p><em>Figure 1: Authentic A4 Board Examination Sheet compiled by ExamCraft AI featuring header metadata block, symmetrical 2x2 MCQ layout, short questions with assigned marks, and Section C multi-step problem solving.</em></p>
+  <table>
+    <thead>
+      <tr>
+        <th align="center" width="33%">📱 1. Mobile Teacher Dashboard</th>
+        <th align="center" width="33%">⚙️ 2. Assessment Configurator</th>
+        <th align="center" width="34%">📄 3. Compiled A4 Board Paper</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr valign="top">
+        <td align="center">
+          <img src="docs/assets/mobile_dashboard.jpg" alt="ExamCraft AI Flutter Mobile Dashboard" width="260" />
+          <br /><br />
+          <em>Real-time FastAPI health telemetry (<code>Connected 1276ms</code>), curriculum counters (Classes, Subjects, Generated Papers), and rapid generation actions.</em>
+        </td>
+        <td align="center">
+          <img src="docs/assets/mobile_generator.jpg" alt="ExamCraft AI Mobile Assessment Generator" width="260" />
+          <br /><br />
+          <em>Curriculum subject chips (Physics, Chemistry, Math, Bio, CS), Class 9–12 selector, textbook chapter scope, teacher instructions, and dynamic question count sliders.</em>
+        </td>
+        <td align="center">
+          <img src="docs/assets/sample_exam_paper.png" alt="ExamCraft AI Generated A4 Assessment Paper" width="280" />
+          <br /><br />
+          <em>ReportLab vector PDF output with official Pakistani board header, symmetrical 2x2 MCQ grids, short questions with marks, and Section C multi-step problems.</em>
+        </td>
+      </tr>
+    </tbody>
+  </table>
 </div>
 
 ---
